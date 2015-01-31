@@ -13,7 +13,7 @@
 
 package org.rapla.mobile.android.browser.integration;
 
-import org.rapla.framework.RaplaContext;
+import org.rapla.facade.ClientFacade;
 import org.rapla.mobile.android.RaplaMobileApplication;
 
 import android.content.Context;
@@ -52,5 +52,5 @@ public interface BrowserIntentHandler {
 	 */
 	public void handleIntent(Context context,
 			RaplaMobileApplication application, Intent intent,
-			RaplaContext raplaContext) throws Exception;
+			ClientFacade facade) throws Exception;
 }

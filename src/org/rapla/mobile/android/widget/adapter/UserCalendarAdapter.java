@@ -14,6 +14,7 @@
 package org.rapla.mobile.android.widget.adapter;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.rapla.mobile.android.R;
 
@@ -41,7 +42,7 @@ public class UserCalendarAdapter extends ArrayAdapter<String> {
 	 *            Calendar objects to be bound
 	 */
 	public UserCalendarAdapter(Context context, int textViewResourceId,
-			String[] objects) {
+			List<String> objects) {
 		super(context, textViewResourceId, objects);
 		
 		// Sort calendars

@@ -13,13 +13,19 @@
 
 package org.rapla.mobile.android.utility.factory;
 
+import java.net.URL;
+
 import org.rapla.RaplaMainContainer;
+import org.rapla.facade.ClientFacade;
+import org.rapla.facade.internal.FacadeImpl;
 import org.rapla.framework.RaplaContext;
+import org.rapla.framework.RaplaException;
 import org.rapla.framework.StartupEnvironment;
-import org.rapla.framework.logger.ConsoleLogger;
+import org.rapla.framework.logger.Logger;
 import org.rapla.framework.logger.NullLogger;
 import org.rapla.mobile.android.RaplaMobileException;
-import org.rapla.mobile.android.utility.RaplaConnectorStartupEnvironment;
+import org.rapla.storage.StorageOperator;
+import org.rapla.storage.dbrm.RemoteOperator;
 
 /**
  * Rapla Context Factory (Singleton)
@@ -56,15 +62,35 @@ public class RaplaContextFactory {
 	 * @param isSecure
 	 *            Whether to use http or https
 	 */
-	public RaplaContext createInstance(String url, int port, boolean isSecure)
+	public RaplaContext createInstance(final String host)
 			throws RaplaMobileException {
 
-		NullLogger logger = new NullLogger();
-
+		
 		try {
-			StartupEnvironment env = new RaplaConnectorStartupEnvironment(url,
-					port, "/", isSecure, logger);
+		    final URL url = new URL(host);
+		    final Logger logger = new NullLogger();
+            StartupEnvironment env = new StartupEnvironment() {
+                
+                @Override
+                public int getStartupMode() {
+                    return CONSOLE;
+                }
+                
+                @Override
+                public URL getDownloadURL() throws RaplaException {
+                    return url;
+                }
+                
+                @Override
+                public Logger getBootstrapLogger() {
+                    return logger;
+                }
+            };
 			RaplaMainContainer container = new RaplaMainContainer(env);
+			container.addContainerProvidedComponent(RemoteOperator.class, RemoteOperator.class);
+			RemoteOperator lookup = container.getContext().lookup( RemoteOperator.class);
+			container.addContainerProvidedComponentInstance( StorageOperator.class, lookup);
+	        container.addContainerProvidedComponent(ClientFacade.class, FacadeImpl.class);
 			RaplaContext context = container.getContext();
 			return context;
 		} catch (Exception ex) {

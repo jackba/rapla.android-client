@@ -16,12 +16,10 @@ package org.rapla.mobile.android.activity;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.rapla.components.util.DateTools;
 import org.rapla.entities.domain.Appointment;
 import org.rapla.entities.domain.Repeating;
 import org.rapla.entities.domain.RepeatingType;
 import org.rapla.entities.domain.internal.AppointmentImpl;
-import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.RaplaException;
 import org.rapla.framework.RaplaLocale;
 import org.rapla.mobile.android.R;
@@ -70,7 +68,7 @@ public class AppointmentDetailsActivity extends BaseActivity {
 	String weekday;
 	int repeatingFrequency;
 	ArrayAdapter<CharSequence> repeatingTypeAdapter;
-	AppointmentImpl appointment;
+	Appointment appointment;
 
 	public static final String daysOfWeek[] = { "Sun", "Mon", "Tue", "Wed",
 			"Thu", "Fri", "Sat" };
@@ -90,12 +88,7 @@ public class AppointmentDetailsActivity extends BaseActivity {
 
 		// Lazy load appointment formatter
 		if (this.loc == null) {
-			try {
-				this.loc = this.getRaplaContext().lookup(RaplaLocale.class);
-			} catch (RaplaContextException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		    this.loc = this.getRaplaLocale();
 		}
 
 		ALLDAY = new Time();
@@ -104,6 +97,7 @@ public class AppointmentDetailsActivity extends BaseActivity {
 		int id = getIntent().getExtras().getInt(INTENT_INT_APPOINTMENT_ID);
 		if (id == -1) {
 			appointment = (AppointmentImpl) createAppointment();
+			this.getSelectedReservation().addAppointment( appointment);
 		} else {
 			Appointment[] app = this.getSelectedReservation().getAppointments();
 			appointment = (AppointmentImpl) app[id];
@@ -126,7 +120,6 @@ public class AppointmentDetailsActivity extends BaseActivity {
 			emptyAppointment = getFacade().newAppointment(appointmentDate,
 					endRepeatingDate);
 			emptyAppointment.setRepeatingEnabled(false);
-			this.getSelectedReservation().addAppointment(emptyAppointment);
 		} catch (RaplaException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -166,13 +159,13 @@ public class AppointmentDetailsActivity extends BaseActivity {
 		appointment.getEnd().setTime(appointmentDate.getTime());
 		appointment.getEnd().setMinutes(endTime.minute);
 		appointment.getEnd().setHours(endTime.hour);
-
-		try {
-			getFacade().store(appointment);
-		} catch (RaplaException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//
+//		try {
+//			getFacade().store(appointment);
+//		} catch (RaplaException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 
 	private void displayView() {
@@ -254,7 +247,7 @@ public class AppointmentDetailsActivity extends BaseActivity {
 
 	}
 
-	public void getSummary(AppointmentImpl a) {
+	public void getSummary(Appointment a) {
 		repeating = a.getRepeating();
 		final boolean wholeDaysSet = a.isWholeDaysSet();
 		repeatingType = repeating != null ? getItemIndex(repeatingTypes,
@@ -351,16 +344,7 @@ public class AppointmentDetailsActivity extends BaseActivity {
 		b.append(' ');
 		return b.toString();
 	}
-
-	/**
-	 * uses the internal calendar object for date comparison.
-	 * 
-	 * @see DateTools#isSameDay(java.util.Calendar, Date, Date)
-	 */
-	private boolean isSameDay(Date d1, Date d2) {
-		return DateTools.isSameDay(loc.createCalendar(), d1, d2);
-	}
-
+	
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		DatePickerDialog dateDlg = null;

@@ -27,11 +27,9 @@ import android.net.Uri;
 public class MobileCalendarUrlBuilder {
 
 	private String host;
-	private int port;
 	private String username;
 	private String file;
-	private boolean isSecure;
-	public static final String PATTERN = "%s://%s:%s/rapla?page=mobile&user=%s&file=%s&android-client=1";
+	public static final String PATTERN = "%s/rapla?page=mobile&user=%s&file=%s&android-client=1";
 
 	/**
 	 * @param host
@@ -45,12 +43,10 @@ public class MobileCalendarUrlBuilder {
 	 * @param calendarName
 	 *            Name of calendar to be displayed
 	 */
-	public MobileCalendarUrlBuilder(String host, int port, String username,
-			boolean isSecure, String calendarName) {
+	public MobileCalendarUrlBuilder(String host, String username,
+			String calendarName) {
 		this.host = host;
-		this.port = port;
 		this.username = username;
-		this.isSecure = isSecure;
 		this.file = calendarName;
 	}
 
@@ -60,14 +56,7 @@ public class MobileCalendarUrlBuilder {
 	 * @return Ready-to-use url for mobile view of calendar
 	 */
 	public String buildString() {
-		String protocol;
-		if (this.isSecure) {
-			protocol = "https";
-		} else {
-			protocol = "http";
-		}
-		String url = String.format(PATTERN, protocol, this.host, this.port,
-				this.username, this.file);
+		String url = String.format(PATTERN,  this.host, this.username, this.file);
 		// url = "http://lenki.com/test.php";
 		return url;
 	}

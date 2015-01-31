@@ -15,16 +15,17 @@ package org.rapla.mobile.android.activity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
+import org.rapla.entities.User;
 import org.rapla.entities.domain.Allocatable;
 import org.rapla.entities.domain.Appointment;
-import org.rapla.entities.domain.AppointmentFormater;
 import org.rapla.entities.domain.internal.ReservationImpl;
-import org.rapla.framework.RaplaContextException;
+import org.rapla.entities.dynamictype.ClassificationFilter;
+import org.rapla.entities.dynamictype.DynamicType;
+import org.rapla.facade.ClientFacade;
+import org.rapla.framework.RaplaException;
 import org.rapla.mobile.android.R;
-import org.rapla.mobile.android.os.LoadAllocatablesAsyncTask;
-import org.rapla.mobile.android.utility.factory.ExceptionDialogFactory;
-import org.rapla.mobile.android.utility.factory.LoadDataProgressDialogFactory;
 import org.rapla.mobile.android.widget.adapter.AllocatableAdapter;
 
 import android.app.AlertDialog;
@@ -42,9 +43,9 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
 /**
  * The allocatable details screen allows the user to book an allocatable of the
@@ -234,15 +235,7 @@ public class AllocatableDetailsActivity extends BaseActivity {
 
 		CharSequence[] items = new CharSequence[appointments.length];
 		for (int i = 0; i < appointments.length; i++) {
-			try {
-				items[i] =  this.getRaplaContext().lookup(AppointmentFormater.class).getSummary(appointments[i]);
-			} catch (RaplaContextException e) {
-				// Notify user and send back to allocatable categories
-				ExceptionDialogFactory
-						.getInstance()
-						.create(this, R.string.exception_rapla_context_lookup,
-								AllocatableListActivity.class).show();
-			}
+		    items[i] =  this.getAppointmentFormater().getSummary(appointments[i]);
 		}
 
 		builder.setTitle(R.string.allocatable_assign_appointments_dialog_title)
@@ -257,13 +250,19 @@ public class AllocatableDetailsActivity extends BaseActivity {
 	 * reservation
 	 */
 	public void refreshListView() {
-		this.runningTask = new LoadAllocatablesAsyncTask(this,
-				this.getSelectedReservation(), this.allocatableListView,
-				this.getFacade(), this.getIntent().getStringExtra(
-						INTENT_STRING_ALLOCATABLE_CATEGORY_ELEMENT_KEY),
-				ExceptionDialogFactory.getInstance(),
-				LoadDataProgressDialogFactory.getInstance(),
-				AllocatableListActivity.class).execute();
+        String stringExtra = this.getIntent().getStringExtra(   INTENT_STRING_ALLOCATABLE_CATEGORY_ELEMENT_KEY);
+        ClientFacade facade = getFacade();
+        try {
+            DynamicType dynamicType;
+            dynamicType = facade.getDynamicType( stringExtra);
+            ClassificationFilter[] array = dynamicType.newClassificationFilter().toArray();
+            Allocatable[] allocatables = facade.getAllocatables( array );
+            AllocatableAdapter adapter = new AllocatableAdapter(this, this.getSelectedReservation(), allocatables);
+            this.allocatableListView.setAdapter(adapter);
+        } catch (RaplaException e) {
+            e.printStackTrace();
+        }
+        
 	}
 
 	/**
@@ -467,19 +466,26 @@ public class AllocatableDetailsActivity extends BaseActivity {
 
 			// Loop at all appointments of the reservation and check whether the
 			// current appointment is checked
-			for (int i = 0; i < allAppointments.length; i++) {
+			Allocatable currentAllocatable = selectedAllocatableActionHandler.currentAllocatable;
+            for (int i = 0; i < allAppointments.length; i++) {
 				if (list.isItemChecked(i)) {
 					// If item is checked, check whether the user is allowed to
 					// allocate the resource
-					if (getFacade()
-							.hasPermissionToAllocate(
-									allAppointments[i],
-									selectedAllocatableActionHandler.currentAllocatable)) {
+					Appointment appointment = allAppointments[i];
+                    Date today = getFacade().today();
+                    User user;
+                    try {
+                        user = getFacade().getUser();
+                    } catch (RaplaException e) {
+                        throw new RuntimeException(e.getMessage(), e);
+                    }
+                    if (currentAllocatable.canAllocate(user, appointment.getStart(), appointment.getMaxEnd(),today))
+                    {
 						// User is allowed to allocate resource
-						restrictedAppointments.add(allAppointments[i]);
+						restrictedAppointments.add(appointment);
 					} else {
 						// User is not allowed to allocate resource
-						rejectedAppointments.add(allAppointments[i]);
+						rejectedAppointments.add(appointment);
 						list.setItemChecked(i, false);
 					}
 				}
@@ -493,11 +499,11 @@ public class AllocatableDetailsActivity extends BaseActivity {
 			// Restrict only if not all appointments were selected
 			if (allAppointments.length > restrictedAppointmentArray.length) {
 				reservation.setRestriction(
-						selectedAllocatableActionHandler.currentAllocatable,
+						currentAllocatable,
 						restrictedAppointmentArray);
 			} else {
 				reservation.setRestriction(
-						selectedAllocatableActionHandler.currentAllocatable,
+						currentAllocatable,
 						null);
 			}
 

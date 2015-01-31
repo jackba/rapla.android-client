@@ -13,15 +13,19 @@
 
 package org.rapla.mobile.android.activity;
 
-import org.rapla.components.xmlbundle.I18nBundle;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.rapla.entities.configuration.CalendarModelConfiguration;
+import org.rapla.entities.configuration.RaplaMap;
+import org.rapla.facade.QueryModule;
 import org.rapla.mobile.android.PreferencesHandler;
 import org.rapla.mobile.android.R;
-import org.rapla.mobile.android.os.LoadUserCalendarsAsyncTask;
 import org.rapla.mobile.android.utility.MobileCalendarUrlBuilder;
 import org.rapla.mobile.android.utility.RaplaConnection;
 import org.rapla.mobile.android.utility.factory.ExceptionDialogFactory;
-import org.rapla.mobile.android.utility.factory.LoadDataProgressDialogFactory;
 import org.rapla.mobile.android.widget.adapter.UserCalendarAdapter;
+import org.rapla.plugin.autoexport.AutoExportPlugin;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -32,6 +36,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 
 /**
@@ -135,12 +140,23 @@ public class UserCalendarListActivity extends BaseActivity {
 	 */
 	public void refreshListView() {
 		try {
-			I18nBundle i18n =  this.getRaplaContext().lookup(I18nBundle.class);
-			this.runningTask = new LoadUserCalendarsAsyncTask(this,
-					this.listView, this.getFacade(), i18n.getString("default"),
-					ExceptionDialogFactory.getInstance(),
-					LoadDataProgressDialogFactory.getInstance(), null)
-					.execute();
+		    List<String> result = new ArrayList<String>();
+		    QueryModule facade = getFacade();
+            // Get map with calendars
+            RaplaMap<CalendarModelConfiguration> exportMap =  facade.getPreferences().getEntry( AutoExportPlugin.PLUGIN_ENTRY);
+           // result.add(this.defaultCalendarName);
+            if (exportMap != null) {
+                // Initialize string array and set first element to 'default'
+                // +1 as 'default' calendar needs to be added
+
+                // Add values from map to string array
+                for ( String key: exportMap.keySet())
+                {
+                    result.add( key );
+                }
+            }
+            ListAdapter adapter = new UserCalendarAdapter(this, R.layout.calendar_list_item,   result);
+            this.listView.setAdapter(adapter);
 		} catch (Exception e) {
 			ExceptionDialogFactory.getInstance()
 					.create(this, R.string.exception_rapla_context_lookup)
@@ -176,8 +192,8 @@ public class UserCalendarListActivity extends BaseActivity {
 			String selectedCalendar = ((UserCalendarAdapter) listView
 					.getAdapter()).getItem(position);
 			MobileCalendarUrlBuilder urlBuilder = new MobileCalendarUrlBuilder(
-					this.preferences.getHost(), this.preferences.getHostPort(),
-					this.preferences.getUsername(), this.preferences.isSecure(), selectedCalendar);
+					this.preferences.getHost(),
+					this.preferences.getUsername(),  selectedCalendar);
 
 			// Build and start intent to go to mobile view of selected calendar
 			Intent action = new Intent(Intent.ACTION_VIEW,

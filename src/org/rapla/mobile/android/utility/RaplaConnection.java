@@ -13,13 +13,17 @@
 
 package org.rapla.mobile.android.utility;
 
+import org.rapla.components.xmlbundle.I18nBundle;
+import org.rapla.entities.domain.AppointmentFormater;
 import org.rapla.facade.ClientFacade;
+import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.RaplaContext;
+import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.RaplaException;
+import org.rapla.framework.RaplaLocale;
 import org.rapla.mobile.android.PreferencesHandler;
 import org.rapla.mobile.android.RaplaMobileException;
 import org.rapla.mobile.android.RaplaMobileLoginException;
-import org.rapla.mobile.android.utility.factory.ClientFacadeFactory;
 import org.rapla.mobile.android.utility.factory.RaplaContextFactory;
 
 /**
@@ -35,14 +39,21 @@ public class RaplaConnection {
 	private ClientFacade facade;
 	private String username;
 	private String password;
+    private RaplaLocale raplaLocale;
+    private AppointmentFormater appointmentFormater;
 
-	public RaplaConnection(String username, String password, String host,
-			int hostPort, boolean isSecure) throws RaplaMobileException {
+	public RaplaConnection(String username, String password, String host	) throws RaplaMobileException {
 
-		this.context = RaplaContextFactory.getInstance().createInstance(host,
-				hostPort, isSecure);
-		this.facade = ClientFacadeFactory.getInstance().createInstance(
-				this.context);
+		RaplaContextFactory instance = RaplaContextFactory.getInstance();
+		
+        this.context = instance.createInstance(host);
+		try {
+            this.facade = context.lookup( ClientFacade.class);
+            this.raplaLocale = context.lookup( RaplaLocale.class);
+            this.appointmentFormater = context.lookup( AppointmentFormater.class);
+        } catch (RaplaContextException e) {
+            throw new RaplaMobileException( e.getMessage(), e);
+        }
 		this.username = username;
 		this.password = password;
 	}
@@ -50,7 +61,7 @@ public class RaplaConnection {
 	public RaplaConnection(PreferencesHandler preferences)
 			throws RaplaMobileException {
 		this(preferences.getUsername(), preferences.getPassword(), preferences
-				.getHost(), preferences.getHostPort(), preferences.isSecure());
+				.getHost());
 	}
 
 	public boolean login() throws RaplaMobileLoginException {
@@ -62,11 +73,22 @@ public class RaplaConnection {
 		}
 	}
 
-	public RaplaContext getContext() {
-		return this.context;
-	}
-
+	
+	public AppointmentFormater getAppointmentFormater() 
+	{
+        return appointmentFormater;
+    }
+	
+	public RaplaLocale getRaplaLocale() 
+	{
+        return raplaLocale;
+    }
+	
 	public ClientFacade getFacade() {
+	    if ( facade == null)
+	    {
+	        throw new IllegalStateException();
+	    }
 		return this.facade;
 	}
 }

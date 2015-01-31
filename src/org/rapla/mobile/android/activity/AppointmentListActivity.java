@@ -16,9 +16,7 @@ package org.rapla.mobile.android.activity;
 import org.rapla.entities.domain.Appointment;
 import org.rapla.entities.domain.AppointmentFormater;
 import org.rapla.mobile.android.R;
-import org.rapla.mobile.android.os.LoadAppointmentsAsyncTask;
 import org.rapla.mobile.android.utility.factory.ExceptionDialogFactory;
-import org.rapla.mobile.android.utility.factory.LoadDataProgressDialogFactory;
 import org.rapla.mobile.android.widget.adapter.AppointmentAdapter;
 
 import android.app.AlertDialog;
@@ -176,15 +174,13 @@ public class AppointmentListActivity extends BaseActivity {
 		try {
 			// Lazy load appointment formatter
 			if (this.formatter == null) {
-				this.formatter = this.getRaplaContext().lookup(AppointmentFormater.class);
+				this.formatter = this.getAppointmentFormater();
 			}
-			// Execute task
-			this.runningTask = new LoadAppointmentsAsyncTask(this,
-					this.formatter, this.appointmentListView,
-					this.getSelectedReservation(),
-					ExceptionDialogFactory.getInstance(),
-					LoadDataProgressDialogFactory.getInstance(),
-					EventDetailsActivity.class).execute();
+			// Retrieval successful, update list view
+            AppointmentAdapter adapter = new AppointmentAdapter(this,
+                    R.layout.appointment_list_item, getSelectedReservation().getAppointments(),
+                    this.formatter);
+            this.appointmentListView.setAdapter(adapter);
 		} catch (Exception e) {
 			ExceptionDialogFactory.getInstance().create(this,
 					R.string.exception_rapla_context_lookup);

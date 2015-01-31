@@ -13,9 +13,10 @@
 
 package org.rapla.mobile.android.activity;
 
+import org.rapla.entities.domain.AppointmentFormater;
 import org.rapla.entities.domain.internal.ReservationImpl;
 import org.rapla.facade.ClientFacade;
-import org.rapla.framework.RaplaContext;
+import org.rapla.framework.RaplaLocale;
 import org.rapla.mobile.android.RaplaMobileApplication;
 import org.rapla.mobile.android.RuntimeStorage;
 import org.rapla.mobile.android.utility.RaplaConnection;
@@ -98,19 +99,30 @@ public abstract class BaseActivity extends Activity {
 	 * @return Ready to use client facade instance
 	 */
 	public ClientFacade getFacade() {
-		return ((RaplaConnection) this.getCustomApplication().storageGet(
-				RaplaConnection.IDENTIFIER)).getFacade();
+		return getConnection().getFacade();
 	}
 
-	/**
-	 * Get rapla context
-	 * 
-	 * @return Current rapla context
-	 */
-	public RaplaContext getRaplaContext() {
-		return ((RaplaConnection) this.getCustomApplication().storageGet(
-				RaplaConnection.IDENTIFIER)).getContext();
+    private RaplaConnection getConnection() {
+        RaplaConnection storageGet = (RaplaConnection) this.getCustomApplication().storageGet(
+				RaplaConnection.IDENTIFIER);
+        if ( storageGet == null)
+        {
+            throw new RuntimeException("Can't be null");
+        }
+        return storageGet;
+    }
+	
+	public RaplaLocale getRaplaLocale()
+	{
+	    return getConnection().getRaplaLocale();
 	}
+	
+	
+	public AppointmentFormater getAppointmentFormater()
+	{
+	    return getConnection().getAppointmentFormater();
+	}
+	
 
 	/**
 	 * Get the selected reservation that all other activities work with

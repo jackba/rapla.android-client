@@ -13,8 +13,10 @@
 
 package org.rapla.mobile.android.activity;
 
+import java.util.Date;
 import java.util.Locale;
 
+import org.rapla.components.util.DateTools;
 import org.rapla.entities.domain.Allocatable;
 import org.rapla.entities.domain.Appointment;
 import org.rapla.entities.domain.internal.ReservationImpl;
@@ -126,6 +128,10 @@ public class EventDetailsActivity extends BaseActivity {
 		if (reservation == null) {
 			try {
 				reservation = (ReservationImpl) getFacade().newReservation();
+				Date startDate = getFacade().today();
+                Date endDate = new Date( startDate.getTime() + DateTools.MILLISECONDS_PER_HOUR);
+                Appointment appointment = getFacade().newAppointment( startDate, endDate);
+                reservation.addAppointment( appointment);
 				this.setSelectedReservation(reservation);
 
 			} catch (RaplaException e) {

@@ -85,14 +85,7 @@ public class LoginActivity extends BaseActivity {
 		// Pre-populate UI with username and host
 		this.username.setText(loginData.getUsername());
 		if (loginData.hasHost()) {
-			String protocol;
-			if(loginData.isSecure()) {
-				protocol = "https://";
-			} else {
-				protocol = "http://";
-			}
-			this.server.setText(String.format((loginData.hasHostPort() ? "%s%s:%s" : "%s%s"), protocol, loginData.getHost(),
-					loginData.getHostPort()));
+			this.server.setText( loginData.getHost());
 		}
 
 		if (calledFromHomeActivity) {
@@ -169,46 +162,12 @@ public class LoginActivity extends BaseActivity {
 		// the screen was called from HomeActivity, overwrites the existing
 		// data
 
-		int port = 80;
-		String host = "";
-		String[] porttext;
-		boolean isSecure = false;
-		String serverInput;
 
 		try {
-			serverInput = server.getText().toString();
-			if(serverInput.contains("https://")) {
-				isSecure = true;
-				serverInput = serverInput.replace("https://", "");
-			} else if(serverInput.contains("http://")) {
-				isSecure = false;
-				serverInput = serverInput.replace("http://", "");
-			}
-
-			// split the server ip address which was entered by user into
-			// the
-			// number part and the port part
-			porttext = serverInput.split(":");
-
-			if (porttext != null && porttext.length >= 2
-					&& porttext[1].length() >= 1) {
-				host = porttext[0];
-
-				// ensure that porttext[1] is a number.
-				port = Integer.parseInt(porttext[1]);
-
-			} else {
-				// standard values when no port is given
-				host = server.getText().toString();
-				port = 80;
-			}
-
+		    String serverInput = server.getText().toString();
 			loginData.setUsername(username.getText().toString());
 			loginData.setPassword(password.getText().toString());
-			loginData.setHost(host);
-			loginData.setHostPort(port);
-			loginData.setSecure(isSecure);
-
+			loginData.setHost(serverInput);
 			// call the login method
 			login(loginData);
 

@@ -171,24 +171,11 @@ public class PreferencesHandler {
 		return this.preferences.contains(KEY_HOST);
 	}
 
-	public int getHostPort() {
-		return this.preferences.getInt(KEY_HOST_POST, 0);
-	}
-
-	public void setHostPort(int port) {
-		this.preferences.edit().putInt(KEY_HOST_POST, port).commit();
-	}
-
-	public boolean hasHostPort() {
-		return this.preferences.contains(KEY_HOST_POST);
-	}
-
 	/**
 	 * @return Whether username, password, host and port are set
 	 */
 	public boolean hasConnectionPreferences() {
-		return this.hasUsername() && this.hasPassword() && this.hasHost()
-				&& this.hasHostPort();
+		return this.hasUsername() && this.hasPassword() && this.hasHost();
 	}
 
 	private void setSecretKey(String key) {
@@ -207,12 +194,5 @@ public class PreferencesHandler {
 		return this.preferences.contains(KEY_PASSWORD);
 	}
 	
-	public void setSecure(boolean secured) {
-		this.preferences.edit().putBoolean(KEY_IS_SECURE, secured).commit();
-	}
-	
-	public boolean isSecure() {
-		return this.preferences.getBoolean(KEY_IS_SECURE, false);
-	}
 
 }

@@ -13,6 +13,7 @@
 
 package org.rapla.mobile.android.activity;
 
+import org.rapla.facade.ClientFacade;
 import org.rapla.mobile.android.PreferencesHandler;
 import org.rapla.mobile.android.R;
 import org.rapla.mobile.android.RaplaMobileApplication;
@@ -63,7 +64,8 @@ public class BrowserGatewayActivity extends BaseActivity {
 		}
 
 		// Get parameters from url intent
-		Uri data = this.getIntent().getData();
+		Intent intent = this.getIntent();
+        Uri data = intent.getData();
 
 		// Define goto activity if something fails
 		Class<? extends BaseActivity> goTo;
@@ -80,8 +82,9 @@ public class BrowserGatewayActivity extends BaseActivity {
 			boolean handled = false;
 			for (BrowserIntentHandler handler : registeredHandlers) {
 				if (handler.matches(data)) {
-					handler.handleIntent(this, this.getCustomApplication(),
-							this.getIntent(), this.getRaplaContext());
+					RaplaMobileApplication customApplication = this.getCustomApplication();
+                    ClientFacade facade = this.getFacade();
+                    handler.handleIntent(this, customApplication, intent, facade);
 					handled = true;
 					break;
 				}
